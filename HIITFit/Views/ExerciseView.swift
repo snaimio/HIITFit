@@ -24,7 +24,16 @@ struct ExerciseView: View {
     
     var doneButton: some View {
         Button("Done") {
-//            history.addDoneExercise(Exercise.exercises[index].exerciseName)
+            history.addDoneExercise(Exercise.exercises[index].exerciseName)
+            timerDone = false
+            showTimer.toggle()
+            if lastExercise {
+                            showSuccess.toggle()
+                        }
+                        else {
+                            selectedTab += 1
+                        }
+            // history.addDoneExercise(Exercise.exercises[index].exerciseName)
 //            timerDone = false
 //            showTimer.toggle()
 //            if lastExercise {
@@ -33,7 +42,7 @@ struct ExerciseView: View {
 //            else {
 //                selectedTab += 1
 //            }
-            selectedTab = lastExercise ? 9 : selectedTab + 1
+            //selectedTab = lastExercise ? 9 : selectedTab + 1
         }
     }
     
@@ -47,27 +56,40 @@ struct ExerciseView: View {
     
     @EnvironmentObject var history: HistoryStore
     
+    @State private var rating = 0
+    
+    @State private var showHistory = false
+    
     var body: some View {
         GeometryReader { geometry in
             VStack {
-                HeaderView(titleText: exercise.exerciseName)
+                HeaderView(selectedTab: $selectedTab, titleText: exercise.exerciseName)
                     .padding(.bottom)
                 VideoPlayerView(videoName: exercise.videoName)
                     .frame(height: geometry.size.height * 0.35)
                     .padding(20)
-                Text(Date().addingTimeInterval(interval), style: .timer)
-                    .font(.system(size: geometry.size.height * 0.07))
+                if showTimer {
+                    TimerView(timerDone: $timerDone, size: geometry.size.height * 0.07)
+                }
                 HStack(spacing: 150) {
                     startButton
                     doneButton
+                        .disabled(!timerDone)
+                        .sheet(isPresented: $showSuccess) {
+                            SuccessView(selectedTab: $selectedTab)
+                                .presentationDetents([.medium, .large])
+                        }
                 }
                 .font(.title3)
                 .padding()
-                RatingView()
+                RatingView(rating: $rating)
                     .padding()
                 Spacer()
                 Button("History") {
-                    
+                    showHistory.toggle()
+                }
+                .sheet(isPresented: $showHistory) {
+                    HistoryView(showHistory: $showHistory)
                 }
                 .padding(.bottom)
             }
@@ -76,7 +98,7 @@ struct ExerciseView: View {
 }
 
 #Preview {
-    ExerciseView(selectedTab: .constant(1), index: 0)
+    ExerciseView(selectedTab: .constant(0), index: 0)
         .environmentObject(HistoryStore())
 }
 
